@@ -1,12 +1,13 @@
 import sys
 import os
 import hashlib
+import requests
 
 
 class flopboxClient(object):
 
     def __init__(self):
-        self.server_address = raw_input("Enter the server address: ")
+        self.url = raw_input("Enter the server URL: ")
         self.tracked_files = {}
         self.download()
 
@@ -39,8 +40,8 @@ class flopboxClient(object):
             # TODO check if any files are not present in the client folder
             # and delete() them from the server (if they are on the server)
 
-    def upload(self):
-        pass
+    def upload(self, file):
+        
 
     def download(self):
         pass
