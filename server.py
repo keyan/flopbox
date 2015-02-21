@@ -1,3 +1,12 @@
+# flopbox Server
+#
+# Handles file sync
+#
+# Run this in a different directory than client.py:
+# python server.py 
+#
+# Author(s): Keyan Pishdadian (and maybe Noah Ennis)
+
 import os
 from hashlib import sha1
 
@@ -12,24 +21,24 @@ UPLOAD_FOLDER = os.path.realpath(__file__)
 
 @app.route('/', methods=['GET'])
 def index():
-    return 'index'
+    return '<h1>index</h1>'
 
 
-@app.route('/file_list', methods=['POST'])
+@app.route('/file_list/', methods=['POST'])
 def file_list():
-    return file_list
+    return 'file_list'
 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload/', methods=['POST'])
 def upload():
     if request.method == 'POST':
         file = request.files['file']
         print file
 
 
-@app.route('/download', methods=['GET'])
+@app.route('/download/', methods=['GET'])
 def download():
-    pass
+    return "<h1>This is the download page</h1>"
 
 
 if __name__ == "__main__":

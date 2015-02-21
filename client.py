@@ -1,6 +1,7 @@
 # flopbox Client
 #
-# Run this in the directory to be tracked:
+# Run this in the directory to be tracked,
+# enter the URL of the server when prompted:
 # python client.py
 #
 # Issues:
@@ -22,13 +23,15 @@ import requests
 
 class flopboxClient(object):
 
-    def __init__(self):
-        self.url = raw_input("Enter the server URL: ")
+    def __init__(self, url):
+        # Maybe uncomment the next line later and have user input instead?
+        # self.url = raw_input("Enter the server URL: ")
+        self.url = url
         self.tracked_files = {}
         self.download()  # This doesn't do anything yet.
-        self.loop()  # Infinite loop!
 
     def loop(self):
+        """ Infinite loop! """
         while True:
             self.update_tracked_file_list()
             self.update_server()
@@ -120,4 +123,5 @@ class flopboxClient(object):
 
 
 if __name__ == "__main__":
-    flopboxClient()
+    client = flopboxClient()
+    client.loop()
