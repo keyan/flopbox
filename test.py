@@ -21,18 +21,27 @@ class ServerTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_empty_get_request_to_index(self):
+    def test_empty_get_to_index(self):
         rv = self.app.get('/')
-        assert 'index' in rv.data
+        assert 'GET' in rv.data
 
-    def test_simple_post(self):
+    def test_empty_post_to_index(self):
+        rv = self.app.post('/')
+        assert 'POST' in rv.data
+
+    def test_empty_post_to_upload(self):
         # Why is this failing?
+        r = requests.post(self.url + 'upload/')
+        print r.content
+        assert r.status_code == 200
+
+    def test_manual_upload(self):
         files = {self.filename: self.file_contents}
         r = requests.post(self.url + 'upload/', files=files)
         print r.content
-        assert r.status_code == '200'
+        assert r.status_code == 200
 
-    def test_upload_file(self):
+    def test_client_upload_file(self):
         # Doesn't do anything yet
         self.client.upload(self.filename, self.file_contents)
         self.fail("Test not finished")
