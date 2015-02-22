@@ -13,10 +13,11 @@ from hashlib import sha1
 from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
 
-app = Flask(__name__)
-
 # Configuration
-UPLOAD_FOLDER = os.path.abspath('.') + '/uploads'
+UPLOAD_FOLDER = os.path.abspath('.') + '/uploads/'
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -38,9 +39,9 @@ def upload():
         file = request.files['file']
         if file:
             filename = secure_filename(file.filename)
+            filename = file.filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return 'FILE UPLOADED'
-        return 'POST request'
 
 
 @app.route('/download/', methods=['GET'])
