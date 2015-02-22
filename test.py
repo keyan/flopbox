@@ -1,7 +1,6 @@
 import os
 from hashlib import sha1
 import unittest
-from threading import Thread
 import shutil
 
 import requests
@@ -55,12 +54,11 @@ class ServerTestCase(unittest.TestCase):
         r = self.client.upload(self.file)
         assert r.status_code == 200
         assert self.filename in os.listdir('./uploads')
-        os.remove('./uploads/' + self.filename)
 
     def test_sync_files_in_current_directory(self):
         """Tests whether starting the client loop results in file sync."""
-        # thread = Thread(target=self.client.loop()).start()
-        # thread.join(2)
+        self.client.update_tracked_file_list()
+        self.client.update_server()
         assert 'client.py' in os.listdir('./uploads')
 
     def test_sync_file_after_changes(self):
@@ -73,8 +71,8 @@ class ServerTestCase(unittest.TestCase):
         handled with an upload.
         """
         open('test2.txt', 'w')
-        # thread = Thread(target=self.client.loop()).start()
-        # thread.join(2)
+        self.client.update_tracked_file_list()
+        self.client.update_server()
         assert 'test2.txt' in os.listdir('./uploads')
         os.remove('test2.txt')
 
