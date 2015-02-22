@@ -27,6 +27,8 @@ class flopboxClient(object):
         # Maybe uncomment the next line later and have user input instead?
         # self.url = raw_input("Enter the server URL: ")
         self.url = url
+        if url[-1] == '/':
+            self.url = url[0:-1]
         self.tracked_files = {}
         self.download()  # This doesn't do anything yet.
 
@@ -35,7 +37,6 @@ class flopboxClient(object):
         while True:
             self.update_tracked_file_list()
             self.update_server()
-            time.sleep(3)
 
     def update_tracked_file_list(self):
         """
@@ -56,13 +57,13 @@ class flopboxClient(object):
         )
         # Add all untracked files to tracked_files dictionary
         for filename in untracked_files:
-            file_contents = open(filename, 'rb')
-            file_hash = sha1(file_contents).read()
-            file_contents.seek(0)
+            file = open(filename, 'rb')
+            file_hash = sha1(file.read())
+            file.seek(0)
             self.tracked_files[filename] = file_hash
 
             # Upload the untracked file
-            self.upload(filename, file_contents)
+            self.upload(file)
 
     def update_server(self):
         """
@@ -73,14 +74,14 @@ class flopboxClient(object):
         request is sent to the server to upload the file.
         """
         for filename in self.tracked_files.keys():
-                file_contents = open(filename, 'rb')
-                file_hash = sha1(file_contents.read())
-                file_contents.seek(0)
+                file = open(filename, 'rb')
+                file_hash = sha1(file.read())
+                file.seek(0)
                 if not self.tracked_files[filename] == file_hash:
                     self.tracked_files[filename] = file_hash
-                    self.upload(filename, file_contents)
+                    self.upload(file)
 
-    def upload(self, filename, file_contents):
+    def upload(self, file_contents):
         """
         Sends a POST request containing a file to the server.
 
@@ -88,11 +89,12 @@ class flopboxClient(object):
         <key>: the filename as a string
         <value>: the sha1 hash of the file contents read as bytes
         """
-        files = {filename: file_contents}
+        files = {'file': file_contents}
         r = requests.post(self.url + '/upload/', files=files)
         if r.status_code == 404:
             print "The server URL you have entered appears to be down."
             self.url = raw_input("Enter the server URL: ")
+        return r
 
     def download(self):
         """
@@ -116,6 +118,8 @@ class flopboxClient(object):
     def _list_files(self):
         """
         Return a list containing all non-hidden files in the current directory.
+
+        Ignores directories.
         """
         files = [file for file in next(os.walk('.'))[2] if not file[0] == '.']
 

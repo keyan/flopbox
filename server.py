@@ -41,17 +41,13 @@ def upload():
             filename = secure_filename(file.filename)
             filename = file.filename
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return 'FILE UPLOADED'
+            return "Upload complete."
+        return "There was a problem with the file upload requested."
 
 
 @app.route('/download/', methods=['GET'])
 def download():
     return "<h1>This is the download page</h1>"
-
-
-@app.route('/test_post/', methods=['POST'])
-def test_post():
-    return "it worked!"
 
 
 if __name__ == "__main__":
