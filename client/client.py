@@ -26,13 +26,17 @@ import requests
 class flopboxClient(object):
 
     def __init__(self, url):
+        self.system_files = ['client.py',
+                             'client.pyc',
+                             '__init__.py',
+                             '__init__.pyc']
         # Maybe uncomment the next line later and have user input instead?
         # self.url = raw_input("Enter the server URL: ")
         self.url = url
         if url[-1] == '/':
             self.url = url[0:-1]
         self.tracked_files = {}
-        self.initial_client_sync()
+        # self.initial_client_sync()
 
     def loop(self):
         """Infinite loop!"""
@@ -91,6 +95,9 @@ class flopboxClient(object):
         <key>: the filename as a string
         <value>: the sha1 hash of the file contents read as bytes
         """
+
+        if file_contents.name in self.system_files:
+            return 0
         files = {'file': file_contents}
         r = requests.post(self.url + '/upload/', files=files)
         if r.status_code == 404:
@@ -131,5 +138,5 @@ class flopboxClient(object):
 
 
 if __name__ == "__main__":
-    client = flopboxClient()
+    client = flopboxClient(sys.argv[1])
     client.loop()

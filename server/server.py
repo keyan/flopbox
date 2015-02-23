@@ -16,7 +16,7 @@ from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
 
 # Configuration
-UPLOAD_FOLDER = os.path.abspath('.') + '/uploads/'
+UPLOAD_FOLDER = os.path.abspath('.') + '/server/uploads/'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -49,6 +49,7 @@ def upload():
 
 @app.route('/download/', methods=['GET'])
 def download():
+    # TODO: lets user download any file on the server
     return "<h1>This is the download page</h1>"
 
 

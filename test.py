@@ -5,26 +5,28 @@ import shutil
 
 import requests
 
-import server
-import client
+from server import server
+from client import client
 
 
 class ServerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.filename = "test.txt"
-        self.file = open(self.filename, 'w')
-        self.file.write('test')
-        self.file.close()
-        self.file = open(self.filename, "rb")
+        with open('./client/'+self.filename, 'w') as f:
+            f.write('test')
+        with open('./client/test2.txt', 'w') as f:
+            f.write('test')
         self.url = 'http://127.0.0.1:5000/'
 
         self.client = client.flopboxClient(self.url)
 
     def tearDown(self):
         """Clean up by removing all backed up files."""
-        shutil.rmtree('./uploads/')
-        os.mkdir('./uploads')
+        shutil.rmtree('./server/uploads/')
+        os.mkdir('./server/uploads')
+        os.remove('./client/test.txt')
+        os.remove('./client/test2.txt')
 
     def test_empty_get_to_index(self):
         """
@@ -46,49 +48,49 @@ class ServerTestCase(unittest.TestCase):
 
     def test_upload_with_manual_post_request(self):
         """Tests whether a file can be manually uploaded to the server."""
-        files = {'file': self.file}
-        r = requests.post(self.url+'upload/', files=files)
+        with open('./client/'+self.filename, "rb") as f:
+            file = f
+            files = {'file': file}
+            r = requests.post(self.url+'upload/', files=files)
         assert r.status_code == 200
-        assert self.filename in os.listdir('./uploads')
-        os.remove('./uploads/' + self.filename)
+        assert self.filename in os.listdir('./server/uploads')
 
     def test_upload_with_client(self):
         """Tests whether the client can upload a file to the server."""
-        r = self.client.upload(self.file)
+        with open('./client/'+self.filename, "rb") as f:
+            file = f
+            r = self.client.upload(file)
         assert r.status_code == 200
-        assert self.filename in os.listdir('./uploads')
+        assert self.filename in os.listdir('./server/uploads')
 
-    def test_sync_files_in_current_directory(self):
-        """Tests whether starting the client loop results in file sync."""
+    def test_simple_sync_file(self):
+        assert self.filename not in os.listdir('./server/uploads')
         self.client.update_tracked_file_list()
         self.client.update_server()
-        assert 'client.py' in os.listdir('./uploads')
+        assert self.filename in os.listdir('./server/uploads')
 
     def test_sync_file_after_changes(self):
         """Tests if changing an existing file results in re-uploading."""
-        self.file.close()
-        file = open(self.filename, 'w')
-        file.write('testing 1 2 3')
-        file.close()
+        with open('./client/'+self.filename, 'w') as f:
+            f.write('testing 1 2 3')
 
         self.client.update_tracked_file_list()
         self.client.update_server()
 
-        file = open('./uploads/'+self.filename, 'rb')
-        contents = file.readline()
-        file.close()
+        with open('./server/uploads/'+self.filename, 'rb') as f:
+            contents = f.readline()
         assert contents == 'testing 1 2 3'
 
-    def test_create_new_file_results_in_upload(self):
+    def test_creating_new_file_results_in_upload(self):
         """
         Tests if a new file addition is recognized by the client and
         handled with an upload.
         """
-        open('test2.txt', 'w')
+        with open('./client/test2.txt', 'w') as f:
+            f.write('testing')
         self.client.update_tracked_file_list()
         self.client.update_server()
-        assert 'test2.txt' in os.listdir('./uploads')
-        os.remove('test2.txt')
+        assert 'test2.txt' in os.listdir('./server/uploads')
 
 if __name__ == "__main__":
     unittest.main()
