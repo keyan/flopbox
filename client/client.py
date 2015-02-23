@@ -19,6 +19,7 @@
 import sys
 import os
 import time
+import json
 from hashlib import sha1
 import requests
 
@@ -36,13 +37,40 @@ class flopboxClient(object):
         if url[-1] == '/':
             self.url = url[0:-1]
         self.tracked_files = {}
-        # self.initial_client_sync()
+        self.current_file_list = []
+        self.past_file_list = self._list_files()
+        self.initial_client_sync()
 
     def loop(self):
         """Infinite loop!"""
         while True:
-            self.update_tracked_file_list()
-            self.update_server()
+            try:
+                self.update_tracked_file_list()
+                self.update_server()
+                self.update_file_deletes()
+            except IOError:
+                pass
+
+    def initial_client_sync(self):
+        """
+        Makes GET requests to download any files on the server.
+
+        Only called when the client is intialized. Checks to see if there are
+        any files on the server which are not in the client directory, if yes
+        the files are copied to the client directory. This implementation
+        assumes that the server's files are the most up to date and so any
+        duplicate files are overwritten with the server version of the file.
+        """
+        r = requests.get(self.url + "/file_list")
+        try:
+            files_list = json.loads(r.content)
+        except ValueError:
+            return "Server contains no files."
+
+        for filename in files_list:
+            with open(filename, 'w') as f:
+                f.write(requests.get(self.url+'/sync/'+filename).content)
+        return "Client synced to server."
 
     def update_tracked_file_list(self):
         """
@@ -54,11 +82,11 @@ class flopboxClient(object):
         tracked_files dictionary
         """
         # List all non-hidden files in current directory
-        file_list = self._list_files()
+        self.current_file_list = self._list_files()
 
         # List all files with no previous saved history
         untracked_files = (
-            [item for item in file_list
+            [item for item in self.current_file_list
              if item not in self.tracked_files.keys()]
         )
         # Add all untracked files to tracked_files dictionary
@@ -69,7 +97,21 @@ class flopboxClient(object):
             self.tracked_files[filename] = file_hash
 
             # Upload the untracked file
-            self.upload(file)
+            self.upload_to_server(file)
+
+    def update_file_deletes(self):
+        """
+        Check if any files were deleted from the client folder and deletes
+        them from the server (if they are on the server).
+        """
+        self.current_file_list = self._list_files()
+        delete_list = [f for f in self.past_file_list
+                       if f not in self.current_file_list]
+
+        for filename in delete_list:
+            self.delete_from_server(filename)
+
+        self.past_file_list = self.current_file_list
 
     def update_server(self):
         """
@@ -85,9 +127,9 @@ class flopboxClient(object):
                 file.seek(0)
                 if not self.tracked_files[filename] == file_hash:
                     self.tracked_files[filename] = file_hash
-                    self.upload(file)
+                    self.upload_to_server(file)
 
-    def upload(self, file_contents):
+    def upload_to_server(self, file_contents):
         """
         Sends a POST request containing a file to the server.
 
@@ -105,27 +147,12 @@ class flopboxClient(object):
             self.url = raw_input("Enter the server URL: ")
         return r
 
-    def initial_client_sync(self):
+    def delete_from_server(self, filename):
         """
-        Makes GET requests to download any files on the server.
-
-        Only called when the client is intialized. Checks to see if there are
-        any files on the server which are not in the client directory, if yes
-        the files are copied to the client directory. This implementation
-        assumes that the server's files are the most up to date and so any
-        duplicate files are overwritten with the server version of the file.
+        Sends a GET request which deletes the specified file from the server.
         """
-        pass
-        # r = requests.get(self.url + "/file_list")
-        # TODO: All the things
-
-    def delete(self):
-        """
-        Check if any files are not present in the client folder and delete
-        them from the server (if they are on the server).
-        """
-        pass
-        # TODO: All the things
+        r = requests.get(self.url+'/delete/'+filename)
+        return r
 
     def _list_files(self):
         """

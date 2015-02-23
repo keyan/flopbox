@@ -10,6 +10,7 @@
 # Author(s): Keyan Pishdadian (and maybe Noah Ennis)
 
 import os
+import json
 from hashlib import sha1
 
 from flask import Flask, request, redirect, url_for
@@ -30,9 +31,9 @@ def index():
         return 'POST request'
 
 
-@app.route('/file_list/', methods=['POST'])
-def file_list():
-    return 'file_list'
+@app.route('/download/<filename>', methods=['GET'])
+def download(filename):
+    pass
 
 
 @app.route('/upload/', methods=['POST'])
@@ -47,10 +48,35 @@ def upload():
         return "There was a problem with the file upload requested."
 
 
-@app.route('/download/', methods=['GET'])
-def download():
-    # TODO: lets user download any file on the server
-    return "<h1>This is the download page</h1>"
+@app.route('/file_list/', methods=['GET'])
+def file_list():
+    files = _list_files()
+    return json.dumps(files)
+
+
+@app.route('/sync/<filename>', methods=['GET'])
+def sync(filename):
+    with open(filename, 'rb') as f:
+        return f.read()
+
+
+@app.route('/delete/<filename>', methods=['GET'])
+def delete(filename):
+    try:
+        os.remove('./uploads/'+filename)
+    finally:
+        return 0
+
+
+def _list_files():
+    """
+    Return a list containing all non-hidden files in the current directory.
+
+    Ignores directories.
+    """
+    files = [file for file in next(os.walk('./uploads'))[2]
+             if not file[0] == '.']
+    return files
 
 
 if __name__ == "__main__":
