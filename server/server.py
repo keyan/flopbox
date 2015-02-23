@@ -63,9 +63,9 @@ def sync(filename):
 @app.route('/delete/<filename>', methods=['GET'])
 def delete(filename):
     try:
-        os.remove('./uploads/'+filename)
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     finally:
-        return 0
+        return "Done"
 
 
 # TODO: This throws an error and doesn't return the list
@@ -76,7 +76,7 @@ def _list_files():
 
     Ignores directories.
     """
-    files = [file for file in next(os.walk('./uploads'))[2]
+    files = [file for file in next(os.walk(app.config['UPLOAD_FOLDER']))[2]
              if not file[0] == '.']
     return files
 
