@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # flopbox Client
 #
 # Run this in the directory to be tracked,
@@ -30,10 +32,10 @@ class flopboxClient(object):
         if url[-1] == '/':
             self.url = url[0:-1]
         self.tracked_files = {}
-        self.download()  # This doesn't do anything yet.
+        self.initial_client_sync()
 
     def loop(self):
-        """ Infinite loop! """
+        """Infinite loop!"""
         while True:
             self.update_tracked_file_list()
             self.update_server()
@@ -96,12 +98,15 @@ class flopboxClient(object):
             self.url = raw_input("Enter the server URL: ")
         return r
 
-    def download(self):
+    def initial_client_sync(self):
         """
         Makes GET requests to download any files on the server.
 
-        Only called when the client is intialized, after which file removal is
-        handled through delete() calls.
+        Only called when the client is intialized. Checks to see if there are
+        any files on the server which are not in the client directory, if yes
+        the files are copied to the client directory. This implementation
+        assumes that the server's files are the most up to date and so any
+        duplicate files are overwritten with the server version of the file.
         """
         pass
         # r = requests.get(self.url + "/file_list")
@@ -122,7 +127,6 @@ class flopboxClient(object):
         Ignores directories.
         """
         files = [file for file in next(os.walk('.'))[2] if not file[0] == '.']
-
         return files
 
 

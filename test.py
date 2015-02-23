@@ -13,6 +13,9 @@ class ServerTestCase(unittest.TestCase):
 
     def setUp(self):
         self.filename = "test.txt"
+        self.file = open(self.filename, 'w')
+        self.file.write('test')
+        self.file.close()
         self.file = open(self.filename, "rb")
         self.url = 'http://127.0.0.1:5000/'
 
@@ -63,7 +66,18 @@ class ServerTestCase(unittest.TestCase):
 
     def test_sync_file_after_changes(self):
         """Tests if changing an existing file results in re-uploading."""
-        pass
+        self.file.close()
+        file = open(self.filename, 'w')
+        file.write('testing 1 2 3')
+        file.close()
+
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+
+        file = open('./uploads/'+self.filename, 'rb')
+        contents = file.readline()
+        file.close()
+        assert contents == 'testing 1 2 3'
 
     def test_create_new_file_results_in_upload(self):
         """
