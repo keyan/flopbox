@@ -26,20 +26,19 @@ import requests
 
 class flopboxClient(object):
 
-    def __init__(self, url):
+    def __init__(self, url, abspath):
         self.system_files = ['client.py',
                              'client.pyc',
                              '__init__.py',
                              '__init__.pyc']
-        # Maybe uncomment the next line later and have user input instead?
-        # self.url = raw_input("Enter the server URL: ")
+        self.abspath = abspath + '/'
         self.url = url
         if url[-1] == '/':
             self.url = url[0:-1]
         self.tracked_files = {}
         self.current_file_list = []
         self.past_file_list = self._list_files()
-        self.initial_client_sync()
+        # self.initial_client_sync()
 
     def loop(self):
         """Infinite loop!"""
@@ -68,7 +67,7 @@ class flopboxClient(object):
             return "Server contains no files."
 
         for filename in files_list:
-            with open(filename, 'w') as f:
+            with open(self.abspath+filename, 'w') as f:
                 f.write(requests.get(self.url+'/sync/'+filename).content)
         return "Client synced to server."
 
@@ -91,7 +90,7 @@ class flopboxClient(object):
         )
         # Add all untracked files to tracked_files dictionary
         for filename in untracked_files:
-            file = open(filename, 'rb')
+            file = open(self.abspath+filename, 'rb')
             file_hash = sha1(file.read())
             file.seek(0)
             self.tracked_files[filename] = file_hash
@@ -122,7 +121,7 @@ class flopboxClient(object):
         request is sent to the server to upload the file.
         """
         for filename in self.tracked_files.keys():
-                file = open(filename, 'rb')
+                file = open(self.abspath+filename, 'rb')
                 file_hash = sha1(file.read())
                 file.seek(0)
                 if not self.tracked_files[filename] == file_hash:
@@ -160,10 +159,11 @@ class flopboxClient(object):
 
         Ignores directories.
         """
-        files = [file for file in next(os.walk('.'))[2] if not file[0] == '.']
+        files = [file for file in next(os.walk(self.abspath))[2]
+                 if not file[0] == '.' and file not in self.system_files]
         return files
 
 
 if __name__ == "__main__":
-    client = flopboxClient(sys.argv[1])
+    client = flopboxClient(sys.argv[1], os.path.abspath('.'))
     client.loop()

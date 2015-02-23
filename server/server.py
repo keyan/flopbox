@@ -68,6 +68,8 @@ def delete(filename):
         return 0
 
 
+# TODO: This throws an error and doesn't return the list
+# currently making initial syncing fail!
 def _list_files():
     """
     Return a list containing all non-hidden files in the current directory.
