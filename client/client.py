@@ -184,7 +184,7 @@ class flopboxClient(object):
     def download_from_server(self, filename):
         """Downloads the argument file from the server."""
         with open(self.abspath+filename, 'w') as f:
-                f.write(requests.get(self.url+'/sync/'+filename).content)
+                f.write(requests.get(self.url+'/download/'+filename).content)
 
     def _poll_client(self):
         """

@@ -134,8 +134,8 @@ class ServerTestCase(unittest.TestCase):
     def test_add_to_server_downloads_to_client(self):
         self.client.update_tracked_file_list()
         self.client.update_server()
-        # print os.listdir(self.uploads_path)
-        # print os.listdir(self.client_path)
+        print os.listdir(self.uploads_path)
+        print os.listdir(self.client_path)
 
         with open(self.uploads_path+'/'+'download.txt', 'w') as f:
             f.write('testing 1 2 3')
@@ -145,6 +145,8 @@ class ServerTestCase(unittest.TestCase):
         self.client.update_tracked_file_list()
         self.client.update_server()
         self.client.update_client()
+        print os.listdir(self.uploads_path)
+        print os.listdir(self.client_path)
         assert 'download.txt' in os.listdir(self.client_path)
         assert 'download.txt' in os.listdir(self.uploads_path)
 

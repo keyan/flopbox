@@ -36,7 +36,7 @@ def index():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
-    pass
+    send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route('/upload/', methods=['POST'])
@@ -55,13 +55,6 @@ def upload():
 def file_list():
     files = _list_files()
     return json.dumps(files)
-
-
-@app.route('/sync/<filename>', methods=['GET'])
-def sync(filename):
-    with open(filename, 'rb') as f:
-        return f.read()
-    # send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route('/delete/<filename>', methods=['GET'])
