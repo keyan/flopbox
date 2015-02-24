@@ -10,8 +10,7 @@
 # - Design logic doesn't support saving directories recursively
 #
 # TODO:
-# - Add a socket to listen for changes to server files, should be non-blocking?
-#   Either that or I would need another thread...
+# - 
 #
 # Author: Keyan Pishdadian
 
@@ -61,8 +60,7 @@ class flopboxClient(object):
         files_list = self.poll_server()
 
         for filename in files_list:
-            with open(self.abspath+filename, 'w') as f:
-                f.write(requests.get(self.url+'/sync/'+filename).content)
+            self.download_from_server(filename)
         return "Client synced to server."
 
     def update_tracked_file_list(self):
@@ -97,7 +95,7 @@ class flopboxClient(object):
         different than those in the tracked_files dictionary then a POST
         request is sent to the server to upload the file. Also responsible
         for keeping track of any deleted files, which are added to the
-        delete_list to be removed later by update_file_deletes()
+        delete_list and removed off the server later by update_file_deletes().
         """
         for filename in self.tracked_files.keys():
                 try:
@@ -125,9 +123,21 @@ class flopboxClient(object):
         self.delete_list = []
 
     def update_client(self):
-        server_changes = 
+        """
+        Ensures that any file changes on the server are made on the client.
+
+        Gets the list of file changes made on the server and either makes
+        deletions to client files or downloads server files.
+        """
+        server_changes = self.get_server_changes()
+        for action, filename in server_changes:
+            if action == 'delete':
+                os.remove(os.path.join(self.abspath, filename))
+            if action == 'add':
+                self.download_from_server(filename)
 
     def poll_server(self):
+        """Returns a list of all the files on the server."""
         r = requests.get(self.url + "/file_list")
         try:
             files_list = json.loads(r.content)
@@ -137,6 +147,7 @@ class flopboxClient(object):
         return files_list
 
     def get_server_changes(self):
+        """Returns a list of changes that were made on the server."""
         client_state = self._poll_client()
         server_state = self.poll_server()
         server_deletions = [('delete', file) for file in client_state
@@ -171,11 +182,14 @@ class flopboxClient(object):
         r = requests.get(self.url+'/delete/'+filename)
         return r
 
+    def download_from_server(self, filename):
+        """Downloads the argument file from the server."""
+        with open(self.abspath+filename, 'w') as f:
+                f.write(requests.get(self.url+'/sync/'+filename).content)
+
     def _poll_client(self):
         """
         Return a list containing all non-hidden files in the current directory.
-
-        Ignores directories (see Issues above).
         """
         files = [file for file in next(os.walk(self.abspath))[2]
                  if not file[0] == '.' and file not in self.system_files]

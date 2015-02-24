@@ -111,22 +111,23 @@ class ServerTestCase(unittest.TestCase):
         self.client.update_file_deletes()
         assert self.filename not in os.listdir(self.uploads_path)
 
-    def test_delete_from_server_deletes_from_client(self):
-        print os.listdir(self.client_path)
-        print os.listdir(self.uploads_path)
+    def test_client_constructs_server_changes_list(self):
         self.client.update_tracked_file_list()
         self.client.update_server()
-        print os.listdir(self.client_path)
-        print os.listdir(self.uploads_path)
+        requests.get(self.url+'delete/'+self.filename)
+        assert self.filename not in os.listdir(self.uploads_path)
+        assert self.client.get_server_changes() == [('delete', self.filename)]
+
+    def test_delete_from_server_deletes_from_client(self):
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+        assert self.filename in os.listdir(self.uploads_path)
 
         requests.get(self.url+'delete/'+self.filename)
         assert self.filename not in os.listdir(self.uploads_path)
 
-        print self.client.update_server_changes()
-        assert self.client.server_changes == [('delete', self.filename)]
         self.client.update_client()
-        # assert self.filename not in os.listdir(self.client_path)
-
+        assert self.filename not in os.listdir(self.client_path)
 
 if __name__ == "__main__":
     unittest.main()
