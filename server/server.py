@@ -7,6 +7,10 @@
 # Run this in a different directory than client.py:
 # python server.py
 #
+# TODO:
+# - Web UI
+# - Stop using relative paths (line 23/25)
+#
 # Author: Keyan Pishdadian
 
 import os
@@ -16,7 +20,11 @@ from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
 
 # Configuration
-UPLOAD_FOLDER = os.path.abspath('.') + '/server/uploads/'
+UPLOAD_FOLDER = os.path.abspath('.') + '/uploads/'
+try:
+    os.mkdir('uploads')
+except OSError:
+    pass
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
