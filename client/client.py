@@ -132,7 +132,7 @@ class flopboxClient(object):
         for action, filename in server_changes:
             if action == 'delete':
                 os.remove(os.path.join(self.abspath, filename))
-            if action == 'add':
+            elif action == 'add':
                 self.download_from_server(filename)
 
     def poll_server(self):

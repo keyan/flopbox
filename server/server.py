@@ -36,7 +36,9 @@ def index():
 
 @app.route('/download/<filename>', methods=['GET'])
 def download(filename):
-    send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename,
+                               as_attachment=True)
 
 
 @app.route('/upload/', methods=['POST'])
