@@ -94,7 +94,7 @@ class flopboxClient(object):
         """
         Deletes files from the server to reflect changes in local directory.
 
-        Recieves a list of files which are no longer in the client directory
+        Receives a list of files which are no longer in the client directory
         and iterates through making deletion requests. The delete_list is kept
         up to date by update_server().
         """

@@ -1,5 +1,4 @@
 import os
-from hashlib import sha1
 import unittest
 import shutil
 

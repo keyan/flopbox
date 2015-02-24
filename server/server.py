@@ -11,7 +11,6 @@
 
 import os
 import json
-from hashlib import sha1
 
 from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
@@ -71,8 +70,6 @@ def delete(filename):
 def _list_files():
     """
     Return a list containing all non-hidden files in the current directory.
-
-    Ignores directories.
     """
     files = [file for file in next(os.walk(app.config['UPLOAD_FOLDER']))[2]
              if not file[0] == '.']
