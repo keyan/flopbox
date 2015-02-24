@@ -7,7 +7,7 @@
 # Run this in a different directory than client.py:
 # python server.py
 #
-# Author(s): Keyan Pishdadian (and maybe Noah Ennis)
+# Author: Keyan Pishdadian
 
 import os
 import json
@@ -68,8 +68,6 @@ def delete(filename):
         return "Done"
 
 
-# TODO: This throws an error and doesn't return the list
-# currently making initial syncing fail!
 def _list_files():
     """
     Return a list containing all non-hidden files in the current directory.

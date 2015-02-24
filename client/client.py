@@ -10,11 +10,10 @@
 # - Design logic doesn't support saving directories recursively
 #
 # TODO:
-# - Registering file deletions
-# - Downloading files from the server when run in a new directory
-# - Uploading files from the client directory to the server
+# - Add a socket to listen for changes to server files, should be non-blocking?
+#   Either that or I would need another thread...
 #
-# Author(s): Keyan Pishdadian (and maybe Noah Ennis)
+# Author: Keyan Pishdadian
 
 import sys
 import os
@@ -76,7 +75,6 @@ class flopboxClient(object):
         with the same filename present the file and its hash are added to the
         tracked_files dictionary
         """
-        # List all non-hidden files in current directory
         current_file_list = self._list_files()
 
         # List all files with no previous saved history
@@ -84,20 +82,21 @@ class flopboxClient(object):
             [item for item in current_file_list
              if item not in self.tracked_files.keys()]
         )
-        # Add all untracked files to tracked_files dictionary
+        # Add all untracked files to tracked_files dictionary and upload
         for filename in untracked_files:
             file = open(self.abspath+filename, 'rb')
             file_hash = sha1(file.read())
             file.seek(0)
             self.tracked_files[filename] = file_hash
-
-            # Upload the untracked file
             self.upload_to_server(file)
 
     def update_file_deletes(self):
         """
-        Check if any files were deleted from the client folder and deletes
-        them from the server (if they are on the server).
+        Deletes files from the server to reflect changes in local directory.
+
+        Recieves a list of files which are no longer in the client directory
+        and iterates through making deletion requests. The delete_list is kept
+        up to date by update_server().
         """
         for filename in self.delete_list:
             self.delete_from_server(filename)
@@ -110,7 +109,9 @@ class flopboxClient(object):
 
         Rehashes all the files in the client directory, if the hashes are
         different than those in the tracked_files dictionary then a POST
-        request is sent to the server to upload the file.
+        request is sent to the server to upload the file. Also responsible
+        for keeping track of any deleted files, which are added to the
+        delete_list to be removed later by update_file_deletes()
         """
         for filename in self.tracked_files.keys():
                 try:
@@ -129,8 +130,8 @@ class flopboxClient(object):
         Sends a POST request containing a file to the server.
 
         The file is sent as a single entry dictionary in the format:
-        <key>: the filename as a string
-        <value>: the sha1 hash of the file contents read as bytes
+        <key>: the string 'file'
+        <value>: the file contents read as bytes
         """
 
         if file_contents.name in self.system_files:

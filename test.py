@@ -114,4 +114,3 @@ class ServerTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-    # TODO: Path problems with the file listing function
