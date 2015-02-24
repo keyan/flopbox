@@ -154,7 +154,7 @@ class flopboxClient(object):
         """
         Return a list containing all non-hidden files in the current directory.
 
-        Ignores directories.
+        Ignores directories (see Issues above).
         """
         files = [file for file in next(os.walk(self.abspath))[2]
                  if not file[0] == '.' and file not in self.system_files]

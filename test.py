@@ -28,8 +28,11 @@ class ServerTestCase(unittest.TestCase):
         """Clean up by removing all backed up files."""
         shutil.rmtree(self.uploads_path)
         os.mkdir(self.uploads_path)
-        os.remove(self.client_path+'/test.txt')
-        os.remove(self.client_path+'/test2.txt')
+        try:
+            os.remove(self.client_path+'/test.txt')
+            os.remove(self.client_path+'/test2.txt')
+        except OSError:
+            pass
 
     def test_empty_get_to_index(self):
         """
@@ -87,29 +90,25 @@ class ServerTestCase(unittest.TestCase):
     def test_manual_delete_from_server_function(self):
         self.client.update_tracked_file_list()
         self.client.update_server()
-
         assert self.filename in os.listdir(self.uploads_path)
         assert self.filename in os.listdir(self.client_path)
 
         os.remove(self.client_path+'/'+self.filename)
         self.client.delete_from_server(self.filename)
-
         assert self.filename not in os.listdir(self.client_path)
-        with open('./client/'+self.filename, 'w') as f:
-            f.write('test')
 
     def test_delete_file_on_client_results_in_delete_on_server(self):
         self.client.update_tracked_file_list()
         self.client.update_server()
-        print os.listdir(self.client_path)
-        print os.listdir(self.uploads_path)
         assert self.filename in os.listdir(self.uploads_path)
         assert self.filename in os.listdir(self.client_path)
+
         os.remove(self.client_path+'/'+self.filename)
         assert self.filename not in os.listdir(self.client_path)
 
+        self.client.update_tracked_file_list()
+        self.client.update_server()
         self.client.update_file_deletes()
-        print os.listdir(self.uploads_path)
         assert self.filename not in os.listdir(self.uploads_path)
 
 if __name__ == "__main__":
