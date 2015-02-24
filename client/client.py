@@ -99,9 +99,11 @@ class flopboxClient(object):
         for filename in self.tracked_files.keys():
                 try:
                     file = open(self.abspath+filename, 'rb')
-                    file_hash = sha1(file.read())
+                    file_hash = sha1(file.read()).digest()
                     file.seek(0)
                     if not self.tracked_files[filename] == file_hash:
+                        print file.name + " has changed"
+                        print file_hash
                         self.tracked_files[filename] = file_hash
                         self.upload_to_server(file)
                 except IOError:
