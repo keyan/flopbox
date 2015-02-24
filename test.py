@@ -51,7 +51,7 @@ class ServerTestCase(unittest.TestCase):
 
     def test_upload_with_manual_post_request(self):
         """Tests whether a file can be manually uploaded to the server."""
-        with open('./client/'+self.filename, "rb") as f:
+        with open(self.client_path+'/'+self.filename, "rb") as f:
             file = f
             files = {'file': file}
             r = requests.post(self.url+'upload/', files=files)
@@ -84,24 +84,32 @@ class ServerTestCase(unittest.TestCase):
             contents = f.readline()
         assert contents == 'testing 1 2 3'
 
-    def test_creating_new_file_results_in_upload(self):
-        """
-        Tests if a new file addition is recognized by the client and
-        handled with an upload.
-        """
-        with open(self.client_path+'/test2.txt', 'w') as f:
-            f.write('testing')
+    def test_manual_delete_from_server_function(self):
         self.client.update_tracked_file_list()
         self.client.update_server()
-        assert 'test2.txt' in os.listdir(self.uploads_path)
+
+        assert self.filename in os.listdir(self.uploads_path)
+        assert self.filename in os.listdir(self.client_path)
+
+        os.remove(self.client_path+'/'+self.filename)
+        self.client.delete_from_server(self.filename)
+
+        assert self.filename not in os.listdir(self.client_path)
+        with open('./client/'+self.filename, 'w') as f:
+            f.write('test')
 
     def test_delete_file_on_client_results_in_delete_on_server(self):
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+        print os.listdir(self.client_path)
+        print os.listdir(self.uploads_path)
         assert self.filename in os.listdir(self.uploads_path)
         assert self.filename in os.listdir(self.client_path)
         os.remove(self.client_path+'/'+self.filename)
         assert self.filename not in os.listdir(self.client_path)
 
-        self.update_file_deletes()
+        self.client.update_file_deletes()
+        print os.listdir(self.uploads_path)
         assert self.filename not in os.listdir(self.uploads_path)
 
 if __name__ == "__main__":

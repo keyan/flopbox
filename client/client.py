@@ -36,19 +36,15 @@ class flopboxClient(object):
         if url[-1] == '/':
             self.url = url[0:-1]
         self.tracked_files = {}
-        self.current_file_list = []
-        self.past_file_list = self._list_files()
-        # self.initial_client_sync()
+        self.delete_list = []
+        self.initial_client_sync()
 
     def loop(self):
         """Infinite loop!"""
         while True:
-            try:
-                self.update_tracked_file_list()
-                self.update_server()
-                self.update_file_deletes()
-            except IOError:
-                pass
+            self.update_tracked_file_list()
+            self.update_server()
+            self.update_file_deletes()
 
     def initial_client_sync(self):
         """
@@ -81,11 +77,11 @@ class flopboxClient(object):
         tracked_files dictionary
         """
         # List all non-hidden files in current directory
-        self.current_file_list = self._list_files()
+        current_file_list = self._list_files()
 
         # List all files with no previous saved history
         untracked_files = (
-            [item for item in self.current_file_list
+            [item for item in current_file_list
              if item not in self.tracked_files.keys()]
         )
         # Add all untracked files to tracked_files dictionary
@@ -103,14 +99,10 @@ class flopboxClient(object):
         Check if any files were deleted from the client folder and deletes
         them from the server (if they are on the server).
         """
-        self.current_file_list = self._list_files()
-        delete_list = [f for f in self.past_file_list
-                       if f not in self.current_file_list]
-
-        for filename in delete_list:
+        for filename in self.delete_list:
             self.delete_from_server(filename)
 
-        self.past_file_list = self.current_file_list
+        self.delete_list = []
 
     def update_server(self):
         """
@@ -121,12 +113,16 @@ class flopboxClient(object):
         request is sent to the server to upload the file.
         """
         for filename in self.tracked_files.keys():
-                file = open(self.abspath+filename, 'rb')
-                file_hash = sha1(file.read())
-                file.seek(0)
-                if not self.tracked_files[filename] == file_hash:
-                    self.tracked_files[filename] = file_hash
-                    self.upload_to_server(file)
+                try:
+                    file = open(self.abspath+filename, 'rb')
+                    file_hash = sha1(file.read())
+                    file.seek(0)
+                    if not self.tracked_files[filename] == file_hash:
+                        self.tracked_files[filename] = file_hash
+                        self.upload_to_server(file)
+                except IOError:
+                    self.delete_list.append(filename)
+                    del self.tracked_files[filename]
 
     def upload_to_server(self, file_contents):
         """
