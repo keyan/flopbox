@@ -20,6 +20,7 @@ import os
 import time
 import json
 from hashlib import sha1
+
 import requests
 
 
@@ -44,6 +45,8 @@ class flopboxClient(object):
             self.update_tracked_file_list()
             self.update_server()
             self.update_file_deletes()
+            self.update_client()
+            time.sleep(3)
 
     def initial_client_sync(self):
         """
@@ -55,11 +58,7 @@ class flopboxClient(object):
         assumes that the server's files are the most up to date and so any
         duplicate files are overwritten with the server version of the file.
         """
-        r = requests.get(self.url + "/file_list")
-        try:
-            files_list = json.loads(r.content)
-        except ValueError:
-            return "Server contains no files."
+        files_list = self.poll_server()
 
         for filename in files_list:
             with open(self.abspath+filename, 'w') as f:
@@ -75,7 +74,7 @@ class flopboxClient(object):
         with the same filename present the file and its hash are added to the
         tracked_files dictionary
         """
-        current_file_list = self._list_files()
+        current_file_list = self._poll_client()
 
         # List all files with no previous saved history
         untracked_files = (
@@ -89,19 +88,6 @@ class flopboxClient(object):
             file.seek(0)
             self.tracked_files[filename] = file_hash
             self.upload_to_server(file)
-
-    def update_file_deletes(self):
-        """
-        Deletes files from the server to reflect changes in local directory.
-
-        Receives a list of files which are no longer in the client directory
-        and iterates through making deletion requests. The delete_list is kept
-        up to date by update_server().
-        """
-        for filename in self.delete_list:
-            self.delete_from_server(filename)
-
-        self.delete_list = []
 
     def update_server(self):
         """
@@ -124,6 +110,41 @@ class flopboxClient(object):
                 except IOError:
                     self.delete_list.append(filename)
                     del self.tracked_files[filename]
+
+    def update_file_deletes(self):
+        """
+        Deletes files from the server to reflect changes in local directory.
+
+        Receives a list of files which are no longer in the client directory
+        and iterates through making deletion requests. The delete_list is kept
+        up to date by update_server().
+        """
+        for filename in self.delete_list:
+            self.delete_from_server(filename)
+
+        self.delete_list = []
+
+    def update_client(self):
+        server_changes = 
+
+    def poll_server(self):
+        r = requests.get(self.url + "/file_list")
+        try:
+            files_list = json.loads(r.content)
+        except ValueError:
+            return "Server contains no files."
+
+        return files_list
+
+    def get_server_changes(self):
+        client_state = self._poll_client()
+        server_state = self.poll_server()
+        server_deletions = [('delete', file) for file in client_state
+                            if file not in server_state]
+        server_additions = [('add', file) for file in server_state
+                            if file not in client_state]
+
+        return server_deletions + server_additions
 
     def upload_to_server(self, file_contents):
         """
@@ -150,7 +171,7 @@ class flopboxClient(object):
         r = requests.get(self.url+'/delete/'+filename)
         return r
 
-    def _list_files(self):
+    def _poll_client(self):
         """
         Return a list containing all non-hidden files in the current directory.
 

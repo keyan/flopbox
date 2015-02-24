@@ -6,7 +6,7 @@ A simplified reconstruction of dropbox which uses HTTP to sync files between a c
 - [requests]
 
 ### Usage
-1. Run the server on a remote hosting service or another machine using a publically accessable IP address:
+1. Run the server on a remote hosting service or another machine using a publicly accessible IP address:
 
     ```python server.py```
 2. Run the client in a folder you wish to be synced:

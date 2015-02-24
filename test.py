@@ -18,9 +18,10 @@ class ServerTestCase(unittest.TestCase):
         self.client = client.flopboxClient(self.url, self.client_path)
 
         self.filename = "test.txt"
+        self.filename2 = 'test2.txt'
         with open('./client/'+self.filename, 'w') as f:
             f.write('test')
-        with open('./client/test2.txt', 'w') as f:
+        with open('./client/'+self.filename2, 'w') as f:
             f.write('test')
 
     def tearDown(self):
@@ -28,8 +29,8 @@ class ServerTestCase(unittest.TestCase):
         shutil.rmtree(self.uploads_path)
         os.mkdir(self.uploads_path)
         try:
-            os.remove(self.client_path+'/test.txt')
-            os.remove(self.client_path+'/test2.txt')
+            os.remove(self.client_path+'/'+self.filename)
+            os.remove(self.client_path+'/'+self.filename2)
         except OSError:
             pass
 
@@ -40,7 +41,7 @@ class ServerTestCase(unittest.TestCase):
         This test will have to change if a web interface is added.
         """
         r = requests.get(self.url)
-        assert 'GET' in r.content
+        assert '<html' in r.content
 
     def test_empty_post_to_index(self):
         """
@@ -109,6 +110,23 @@ class ServerTestCase(unittest.TestCase):
         self.client.update_server()
         self.client.update_file_deletes()
         assert self.filename not in os.listdir(self.uploads_path)
+
+    def test_delete_from_server_deletes_from_client(self):
+        print os.listdir(self.client_path)
+        print os.listdir(self.uploads_path)
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+        print os.listdir(self.client_path)
+        print os.listdir(self.uploads_path)
+
+        requests.get(self.url+'delete/'+self.filename)
+        assert self.filename not in os.listdir(self.uploads_path)
+
+        print self.client.update_server_changes()
+        assert self.client.server_changes == [('delete', self.filename)]
+        self.client.update_client()
+        # assert self.filename not in os.listdir(self.client_path)
+
 
 if __name__ == "__main__":
     unittest.main()

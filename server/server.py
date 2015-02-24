@@ -16,7 +16,7 @@
 import os
 import json
 
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, render_template
 from werkzeug import secure_filename
 
 # Configuration
@@ -32,10 +32,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    if request.method == 'GET':
-        return 'GET request'
     if request.method == 'POST':
         return 'POST request'
+
+    return render_template("index.html")
 
 
 @app.route('/download/<filename>', methods=['GET'])
