@@ -31,6 +31,8 @@ class ServerTestCase(unittest.TestCase):
         try:
             os.remove(self.client_path+'/'+self.filename)
             os.remove(self.client_path+'/'+self.filename2)
+            os.remove(self.client_path+'/'+'download.txt')
+            os.remove(self.uploads_path+'/'+'download.txt')
         except OSError:
             pass
 
@@ -128,6 +130,23 @@ class ServerTestCase(unittest.TestCase):
 
         self.client.update_client()
         assert self.filename not in os.listdir(self.client_path)
+
+    def test_add_to_server_downloads_to_client(self):
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+        # print os.listdir(self.uploads_path)
+        # print os.listdir(self.client_path)
+
+        with open(self.uploads_path+'/'+'download.txt', 'w') as f:
+            f.write('testing 1 2 3')
+
+        assert 'download.txt' in os.listdir(self.uploads_path)
+        assert 'download.txt' not in os.listdir(self.client_path)
+        self.client.update_tracked_file_list()
+        self.client.update_server()
+        self.client.update_client()
+        assert 'download.txt' in os.listdir(self.client_path)
+        assert 'download.txt' in os.listdir(self.uploads_path)
 
 if __name__ == "__main__":
     unittest.main()

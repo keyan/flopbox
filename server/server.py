@@ -16,15 +16,11 @@
 import os
 import json
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, send_from_directory
 from werkzeug import secure_filename
 
 # Configuration
 UPLOAD_FOLDER = os.path.abspath('.') + '/uploads/'
-try:
-    os.mkdir('uploads')
-except OSError:
-    pass
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -65,6 +61,7 @@ def file_list():
 def sync(filename):
     with open(filename, 'rb') as f:
         return f.read()
+    # send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 @app.route('/delete/<filename>', methods=['GET'])
