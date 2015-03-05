@@ -102,8 +102,6 @@ class flopboxClient(object):
                     file_hash = sha1(file.read()).digest()
                     file.seek(0)
                     if not self.tracked_files[filename] == file_hash:
-                        print file.name + " has changed"
-                        print file_hash
                         self.tracked_files[filename] = file_hash
                         self.upload_to_server(file)
                 except IOError:
@@ -172,8 +170,7 @@ class flopboxClient(object):
         files = {'file': file_contents}
         r = requests.post(self.url + '/upload/', files=files)
         if r.status_code == 404:
-            print "The server URL you have entered appears to be down."
-            self.url = raw_input("Enter the server URL: ")
+            sys.exit("The server URL you have entered appears to be down.")
         return r
 
     def delete_from_server(self, filename):

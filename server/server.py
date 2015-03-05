@@ -77,6 +77,5 @@ def _list_files():
 
 
 if __name__ == "__main__":
-    file_dict = {}
     app.debug = True
     app.run()
